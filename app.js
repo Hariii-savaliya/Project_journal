@@ -9,8 +9,10 @@ const emptyState = document.getElementById("empty-state");
 const formTitle = document.getElementById("form-title");
 const saveButton = document.getElementById("save-entry-btn");
 const cancelButton = document.getElementById("cancel-edit-btn");
+const themeToggle = document.getElementById("theme-toggle");
 
 const STORAGE_KEY = "journal-entries";
+const THEME_KEY = "journal-theme";
 let editingEntryId = null;
 
 function formatTodayDate() {
@@ -39,6 +41,26 @@ function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
+}
+
+function applyTheme(theme) {
+  document.body.classList.toggle("dark-mode", theme === "dark");
+  document.documentElement.classList.toggle("dark-mode", theme === "dark");
+  themeToggle.textContent = theme === "dark" ? "Light mode" : "Dark mode";
+}
+
+function loadTheme() {
+  return localStorage.getItem(THEME_KEY) || "light";
+}
+
+function saveTheme(theme) {
+  localStorage.setItem(THEME_KEY, theme);
+  applyTheme(theme);
+}
+
+function toggleTheme() {
+  const nextTheme = document.documentElement.classList.contains("dark-mode") ? "light" : "dark";
+  saveTheme(nextTheme);
 }
 
 function parseTags(tagsText) {
@@ -216,8 +238,8 @@ form.addEventListener("submit", (event) => {
 
 searchInput.addEventListener("input", renderEntries);
 tagFilter.addEventListener("change", renderEntries);
+themeToggle.addEventListener("click", toggleTheme);
 
-cancelButton.addEventListener("click", cancelEditing);
-
+saveTheme(loadTheme());
 renderEntries();
 cancelEditing();
