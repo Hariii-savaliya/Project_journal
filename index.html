@@ -18,7 +18,7 @@
 
     <main class="main">
       <section class="entry-form">
-        <h2 class="section-title">New Entry</h2>
+        <h2 class="section-title" id="form-title">New Entry</h2>
         <form id="journal-form">
           <div class="field">
             <label for="entry-title">Title</label>
@@ -39,7 +39,10 @@
               required
             ></textarea>
           </div>
-          <button type="submit" class="btn-save">Save Entry</button>
+          <div class="form-actions">
+            <button type="submit" class="btn-save" id="save-entry-btn">Save Entry</button>
+            <button type="button" class="btn-cancel hidden" id="cancel-edit-btn">Cancel Edit</button>
+          </div>
         </form>
       </section>
 

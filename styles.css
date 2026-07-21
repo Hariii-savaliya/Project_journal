@@ -15,6 +15,7 @@
   --accent: #8b6914;
   --accent-hover: #6d520f;
   --accent-soft: rgba(139, 105, 20, 0.1);
+  --danger: #b45309;
   --shadow: 0 2px 12px rgba(44, 36, 23, 0.06);
   --radius: 10px;
 }
@@ -113,13 +114,19 @@ body {
   min-height: 140px;
 }
 
-.btn-save {
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.btn-save,
+.btn-cancel,
+.btn-action {
   display: inline-block;
   font-family: inherit;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #fff;
-  background: var(--accent);
   border: none;
   border-radius: 6px;
   padding: 0.75rem 1.5rem;
@@ -127,11 +134,27 @@ body {
   transition: background 0.15s, transform 0.1s;
 }
 
+.btn-save {
+  color: #fff;
+  background: var(--accent);
+}
+
 .btn-save:hover {
   background: var(--accent-hover);
 }
 
-.btn-save:active {
+.btn-cancel {
+  color: var(--text);
+  background: var(--accent-soft);
+}
+
+.btn-cancel:hover {
+  background: rgba(139, 105, 20, 0.2);
+}
+
+.btn-save:active,
+.btn-cancel:active,
+.btn-action:active {
   transform: scale(0.98);
 }
 
@@ -143,12 +166,48 @@ body {
 }
 
 .entry-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.25rem 1.5rem;
   box-shadow: var(--shadow);
   animation: fadeIn 0.3s ease;
+}
+
+.entry-content {
+  flex: 1;
+}
+
+.entry-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-action {
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+.btn-edit {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.btn-delete {
+  color: #fff;
+  background: var(--danger);
+}
+
+.btn-edit:hover {
+  background: rgba(139, 105, 20, 0.2);
+}
+
+.btn-delete:hover {
+  background: #92400e;
 }
 
 @keyframes fadeIn {
@@ -191,6 +250,10 @@ body {
   padding: 2rem 1rem;
   border: 1px dashed var(--border);
   border-radius: var(--radius);
+}
+
+.hidden {
+  display: none;
 }
 
 .empty-state.hidden {

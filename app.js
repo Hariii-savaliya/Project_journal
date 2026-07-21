@@ -3,8 +3,12 @@ const titleInput = document.getElementById("entry-title");
 const textInput = document.getElementById("entry-text");
 const entriesList = document.getElementById("entries-list");
 const emptyState = document.getElementById("empty-state");
+const formTitle = document.getElementById("form-title");
+const saveButton = document.getElementById("save-entry-btn");
+const cancelButton = document.getElementById("cancel-edit-btn");
 
 const STORAGE_KEY = "journal-entries";
+let editingEntryId = null;
 
 function formatTodayDate() {
   return new Date().toLocaleDateString(undefined, {
@@ -28,21 +32,69 @@ function saveEntries(entries) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
 }
 
-function renderEntry(entry) {
-  const li = document.createElement("li");
-  li.className = "entry-card";
-  li.innerHTML = `
-    <p class="entry-date">${entry.date}</p>
-    <h3 class="entry-title">${escapeHtml(entry.title)}</h3>
-    <p class="entry-text">${escapeHtml(entry.text)}</p>
-  `;
-  return li;
-}
-
 function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
+}
+
+function cancelEditing() {
+  editingEntryId = null;
+  form.reset();
+  formTitle.textContent = "New Entry";
+  saveButton.textContent = "Save Entry";
+  cancelButton.classList.add("hidden");
+}
+
+function startEditingEntry(id) {
+  const entry = loadEntries().find((item) => item.id === id);
+
+  if (!entry) return;
+
+  editingEntryId = id;
+  titleInput.value = entry.title;
+  textInput.value = entry.text;
+  formTitle.textContent = "Edit Entry";
+  saveButton.textContent = "Update Entry";
+  cancelButton.classList.remove("hidden");
+  titleInput.focus();
+}
+
+function deleteEntry(id) {
+  const entries = loadEntries().filter((entry) => entry.id !== id);
+  saveEntries(entries);
+
+  if (editingEntryId === id) {
+    cancelEditing();
+  }
+
+  renderEntries();
+}
+
+function renderEntry(entry) {
+  const li = document.createElement("li");
+  li.className = "entry-card";
+  li.innerHTML = `
+    <div class="entry-content">
+      <p class="entry-date">${escapeHtml(entry.date)}</p>
+      <h3 class="entry-title">${escapeHtml(entry.title)}</h3>
+      <p class="entry-text">${escapeHtml(entry.text)}</p>
+    </div>
+    <div class="entry-actions">
+      <button type="button" class="btn-action btn-edit">Edit</button>
+      <button type="button" class="btn-action btn-delete">Delete</button>
+    </div>
+  `;
+
+  li.querySelector(".btn-edit").addEventListener("click", () => {
+    startEditingEntry(entry.id);
+  });
+
+  li.querySelector(".btn-delete").addEventListener("click", () => {
+    deleteEntry(entry.id);
+  });
+
+  return li;
 }
 
 function renderEntries() {
@@ -56,7 +108,7 @@ function renderEntries() {
 
   emptyState.classList.add("hidden");
   entries.forEach((entry) => {
-    entriesList.prepend(renderEntry(entry));
+    entriesList.appendChild(renderEntry(entry));
   });
 }
 
@@ -68,6 +120,18 @@ form.addEventListener("submit", (event) => {
 
   if (!title || !text) return;
 
+  const entries = loadEntries();
+
+  if (editingEntryId) {
+    const updatedEntries = entries.map((entry) =>
+      entry.id === editingEntryId ? { ...entry, title, text } : entry
+    );
+    saveEntries(updatedEntries);
+    renderEntries();
+    cancelEditing();
+    return;
+  }
+
   const entry = {
     id: Date.now(),
     title,
@@ -75,15 +139,15 @@ form.addEventListener("submit", (event) => {
     date: formatTodayDate(),
   };
 
-  const entries = loadEntries();
   entries.unshift(entry);
   saveEntries(entries);
-
-  entriesList.prepend(renderEntry(entry));
-  emptyState.classList.add("hidden");
+  renderEntries();
 
   form.reset();
   titleInput.focus();
 });
 
+cancelButton.addEventListener("click", cancelEditing);
+
 renderEntries();
+cancelEditing();
