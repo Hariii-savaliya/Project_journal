@@ -4,6 +4,7 @@ const tagsInput = document.getElementById("entry-tags");
 const textInput = document.getElementById("entry-text");
 const searchInput = document.getElementById("search-input");
 const tagFilter = document.getElementById("tag-filter");
+const exportButton = document.getElementById("export-btn");
 const entriesList = document.getElementById("entries-list");
 const emptyState = document.getElementById("empty-state");
 const formTitle = document.getElementById("form-title");
@@ -22,6 +23,37 @@ function formatTodayDate() {
     month: "long",
     day: "numeric",
   });
+}
+
+function formatTodayIso() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseLongDateToIso(displayDate) {
+  const match = displayDate.match(/^[^,]+,\s+([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})$/);
+  if (!match) return displayDate;
+  const [, monthName, day, year] = match;
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const month = monthNames.indexOf(monthName);
+  if (month === -1) return displayDate;
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
 function loadEntries() {
@@ -105,6 +137,43 @@ function filterEntries(entries) {
       selectedTag === "" || (entry.tags || []).includes(selectedTag);
     return matchesText && matchesTag;
   });
+}
+
+function formatExportDate(entry) {
+  if (entry.dateISO) {
+    return entry.dateISO;
+  }
+
+  if (entry.date) {
+    return parseLongDateToIso(entry.date);
+  }
+
+  return "";
+}
+
+function buildExportText(entries) {
+  return entries
+    .map((entry) => {
+      const tagsLine = entry.tags && entry.tags.length ? entry.tags.join(", ") : "none";
+      const exportDate = formatExportDate(entry);
+      return `Date: ${exportDate}\nTitle: ${entry.title}\nTags: ${tagsLine}\n\n${entry.text}\n\n${"-".repeat(40)}\n`;
+    })
+    .join("\n");
+}
+
+function exportEntries() {
+  const entries = loadEntries();
+  const content = buildExportText(entries);
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = `journal-entries-${new Date().toISOString().slice(0, 10)}.txt`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 function cancelEditing() {
@@ -272,6 +341,7 @@ form.addEventListener("submit", (event) => {
     tags,
     text,
     date: formatTodayDate(),
+    dateISO: formatTodayIso(),
   };
 
   entries.unshift(entry);
@@ -284,6 +354,7 @@ form.addEventListener("submit", (event) => {
 
 searchInput.addEventListener("input", renderEntries);
 tagFilter.addEventListener("change", renderEntries);
+exportButton.addEventListener("click", exportEntries);
 themeToggle.addEventListener("click", toggleTheme);
 
 saveTheme(loadTheme());

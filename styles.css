@@ -189,6 +189,27 @@ body.dark-mode {
   transform: translateY(0);
 }
 
+.btn-export {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 999px;
+  padding: 0.85rem 1.25rem;
+  color: var(--text);
+  background: var(--accent-soft);
+  cursor: pointer;
+  transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+.btn-export:hover {
+  background: rgba(139, 105, 20, 0.2);
+}
+
+.btn-export:active {
+  transform: translateY(0);
+}
+
 .btn-cancel {
   color: var(--text);
   background: var(--accent-soft);
@@ -213,7 +234,7 @@ body.dark-mode {
 
 .entries-toolbar {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
   gap: 0.75rem;
   margin-bottom: 1rem;
   align-items: end;
