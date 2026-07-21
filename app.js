@@ -172,30 +172,76 @@ function renderEntry(entry) {
   return li;
 }
 
+function populateEntries(visibleEntries) {
+  entriesList.innerHTML = "";
+  visibleEntries.forEach((entry) => {
+    const card = renderEntry(entry);
+    card.classList.add("fade-in");
+    entriesList.appendChild(card);
+  });
+
+  requestAnimationFrame(() => {
+    entriesList.querySelectorAll(".entry-card.fade-in").forEach((card) => {
+      card.classList.remove("fade-in");
+    });
+  });
+}
+
 function renderEntries() {
   const entries = loadEntries();
-  entriesList.innerHTML = "";
-
-  if (entries.length === 0) {
-    updateTagFilterOptions(entries);
-    emptyState.textContent = "No entries yet. Write your first one above.";
-    emptyState.classList.remove("hidden");
-    return;
-  }
-
-  updateTagFilterOptions(entries);
   const visibleEntries = filterEntries(entries);
+  const previousHeight = entriesList.getBoundingClientRect().height;
+  entriesList.style.minHeight = `${previousHeight}px`;
 
-  if (visibleEntries.length === 0) {
-    emptyState.textContent = "No entries match your search or tag filter.";
-    emptyState.classList.remove("hidden");
+  const finishRender = () => {
+    updateTagFilterOptions(entries);
+
+    if (entries.length === 0) {
+      emptyState.textContent = "No entries yet. Write your first one above.";
+      emptyState.classList.remove("hidden");
+      entriesList.innerHTML = "";
+      entriesList.style.minHeight = "";
+      return;
+    }
+
+    if (visibleEntries.length === 0) {
+      emptyState.textContent = "No entries match your search or tag filter.";
+      emptyState.classList.remove("hidden");
+      entriesList.innerHTML = "";
+      entriesList.style.minHeight = "";
+      return;
+    }
+
+    emptyState.classList.add("hidden");
+    populateEntries(visibleEntries);
+    entriesList.style.minHeight = "";
+  };
+
+  const currentCards = Array.from(entriesList.children).filter((node) => node.classList.contains("entry-card"));
+  if (currentCards.length === 0) {
+    finishRender();
     return;
   }
 
-  emptyState.classList.add("hidden");
-  visibleEntries.forEach((entry) => {
-    entriesList.appendChild(renderEntry(entry));
+  let completed = 0;
+  const handleTransitionEnd = (event) => {
+    if (event.propertyName !== "opacity") return;
+    completed += 1;
+    if (completed >= currentCards.length) {
+      finishRender();
+    }
+  };
+
+  currentCards.forEach((card) => {
+    card.addEventListener("transitionend", handleTransitionEnd, { once: true });
+    card.classList.add("fade-out");
   });
+
+  setTimeout(() => {
+    if (completed < currentCards.length) {
+      finishRender();
+    }
+  }, 260);
 }
 
 form.addEventListener("submit", (event) => {

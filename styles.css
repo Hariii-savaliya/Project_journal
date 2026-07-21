@@ -239,10 +239,39 @@ body.dark-mode {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.9rem 1rem;
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
 .toolbar-field select {
   appearance: none;
+  cursor: pointer;
+}
+
+.toolbar-field input:focus,
+.toolbar-field select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(255, 209, 102, 0.16);
+  transform: translateY(-1px);
+}
+
+.toolbar-field select:hover {
+  border-color: var(--accent);
+}
+
+.toolbar-field select:active {
+  transform: translateY(0);
+}
+
+#tag-filter {
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.entries-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .entry-card {
@@ -254,8 +283,18 @@ body.dark-mode {
   border-radius: calc(var(--radius) + 4px);
   padding: 1.75rem 1.75rem;
   box-shadow: var(--shadow);
-  transition: transform 0.18s ease, border-color 0.18s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease, border-color 0.18s ease;
   animation: fadeIn 0.3s ease;
+}
+
+.entry-card.fade-in {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.entry-card.fade-out {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 .entry-card:hover {
