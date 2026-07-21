@@ -1,16 +1,34 @@
-const form = document.getElementById("journal-form");
-const titleInput = document.getElementById("entry-title");
-const tagsInput = document.getElementById("entry-tags");
-const textInput = document.getElementById("entry-text");
-const searchInput = document.getElementById("search-input");
-const tagFilter = document.getElementById("tag-filter");
-const exportButton = document.getElementById("export-btn");
-const entriesList = document.getElementById("entries-list");
-const emptyState = document.getElementById("empty-state");
-const formTitle = document.getElementById("form-title");
-const saveButton = document.getElementById("save-entry-btn");
-const cancelButton = document.getElementById("cancel-edit-btn");
-const themeToggle = document.getElementById("theme-toggle");
+const els = {
+  form: document.getElementById("journal-form"),
+  titleInput: document.getElementById("entry-title"),
+  tagsInput: document.getElementById("entry-tags"),
+  textInput: document.getElementById("entry-text"),
+  searchInput: document.getElementById("search-input"),
+  tagFilter: document.getElementById("tag-filter"),
+  exportButton: document.getElementById("export-btn"),
+  entriesList: document.getElementById("entries-list"),
+  emptyState: document.getElementById("empty-state"),
+  formTitle: document.getElementById("form-title"),
+  saveButton: document.getElementById("save-entry-btn"),
+  cancelButton: document.getElementById("cancel-edit-btn"),
+  themeToggle: document.getElementById("theme-toggle"),
+};
+
+const {
+  form,
+  titleInput,
+  tagsInput,
+  textInput,
+  searchInput,
+  tagFilter,
+  exportButton,
+  entriesList,
+  emptyState,
+  formTitle,
+  saveButton,
+  cancelButton,
+  themeToggle,
+} = els;
 
 const STORAGE_KEY = "journal-entries";
 const THEME_KEY = "journal-theme";
@@ -56,10 +74,23 @@ function parseLongDateToIso(displayDate) {
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+function normalizeEntry(entry) {
+  const tags = Array.isArray(entry.tags)
+    ? entry.tags.map((tag) => tag.trim()).filter(Boolean)
+    : [];
+
+  return {
+    ...entry,
+    tags,
+    dateISO:
+      entry.dateISO || (entry.date ? parseLongDateToIso(entry.date) : formatTodayIso()),
+  };
+}
+
 function loadEntries() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
+    return stored ? JSON.parse(stored).map(normalizeEntry) : [];
   } catch {
     return [];
   }
@@ -77,7 +108,6 @@ function escapeHtml(str) {
 
 function applyTheme(theme) {
   document.body.classList.toggle("dark-mode", theme === "dark");
-  document.documentElement.classList.toggle("dark-mode", theme === "dark");
   themeToggle.textContent = theme === "dark" ? "Light mode" : "Dark mode";
 }
 
@@ -134,7 +164,7 @@ function filterEntries(entries) {
     const matchesText =
       query === "" || title.includes(query) || text.includes(query);
     const matchesTag =
-      selectedTag === "" || (entry.tags || []).includes(selectedTag);
+      selectedTag === "" || entry.tags.includes(selectedTag);
     return matchesText && matchesTag;
   });
 }
@@ -211,7 +241,7 @@ function deleteEntry(id) {
 }
 
 function renderEntry(entry) {
-  const tagsHtml = entry.tags && entry.tags.length
+  const tagsHtml = entry.tags.length
     ? `<div class="entry-tags">${entry.tags.map((tag) => `<span class="entry-tag">${escapeHtml(tag)}</span>`).join("")}</div>`
     : "";
 
@@ -230,15 +260,16 @@ function renderEntry(entry) {
     </div>
   `;
 
-  li.querySelector(".btn-edit").addEventListener("click", () => {
-    startEditingEntry(entry.id);
-  });
-
-  li.querySelector(".btn-delete").addEventListener("click", () => {
-    deleteEntry(entry.id);
-  });
+  li.querySelector(".btn-edit").addEventListener("click", () => startEditingEntry(entry.id));
+  li.querySelector(".btn-delete").addEventListener("click", () => deleteEntry(entry.id));
 
   return li;
+}
+
+function renderEmptyState(message) {
+  entriesList.innerHTML = "";
+  emptyState.textContent = message;
+  emptyState.classList.remove("hidden");
 }
 
 function populateEntries(visibleEntries) {
@@ -256,61 +287,55 @@ function populateEntries(visibleEntries) {
   });
 }
 
-function renderEntries() {
-  const entries = loadEntries();
-  const visibleEntries = filterEntries(entries);
-  const previousHeight = entriesList.getBoundingClientRect().height;
-  entriesList.style.minHeight = `${previousHeight}px`;
-
-  const finishRender = () => {
-    updateTagFilterOptions(entries);
-
-    if (entries.length === 0) {
-      emptyState.textContent = "No entries yet. Write your first one above.";
-      emptyState.classList.remove("hidden");
-      entriesList.innerHTML = "";
-      entriesList.style.minHeight = "";
-      return;
-    }
-
-    if (visibleEntries.length === 0) {
-      emptyState.textContent = "No entries match your search or tag filter.";
-      emptyState.classList.remove("hidden");
-      entriesList.innerHTML = "";
-      entriesList.style.minHeight = "";
-      return;
-    }
-
-    emptyState.classList.add("hidden");
-    populateEntries(visibleEntries);
-    entriesList.style.minHeight = "";
-  };
-
-  const currentCards = Array.from(entriesList.children).filter((node) => node.classList.contains("entry-card"));
-  if (currentCards.length === 0) {
-    finishRender();
+function fadeOutCurrentCards(callback) {
+  const currentCards = Array.from(entriesList.querySelectorAll(".entry-card"));
+  if (!currentCards.length) {
+    callback();
     return;
   }
 
   let completed = 0;
-  const handleTransitionEnd = (event) => {
-    if (event.propertyName !== "opacity") return;
+  const finish = () => {
     completed += 1;
-    if (completed >= currentCards.length) {
-      finishRender();
-    }
+    if (completed >= currentCards.length) callback();
   };
 
   currentCards.forEach((card) => {
-    card.addEventListener("transitionend", handleTransitionEnd, { once: true });
+    card.addEventListener(
+      "transitionend",
+      (event) => {
+        if (event.propertyName === "opacity") {
+          finish();
+        }
+      },
+      { once: true }
+    );
     card.classList.add("fade-out");
   });
 
   setTimeout(() => {
-    if (completed < currentCards.length) {
-      finishRender();
-    }
-  }, 260);
+    if (completed < currentCards.length) callback();
+  }, 280);
+}
+
+function renderEntries() {
+  const entries = loadEntries();
+  const visibleEntries = filterEntries(entries);
+
+  updateTagFilterOptions(entries);
+
+  if (!entries.length) {
+    renderEmptyState("No entries yet. Write your first one above.");
+    return;
+  }
+
+  if (!visibleEntries.length) {
+    renderEmptyState("No entries match your search or tag filter.");
+    return;
+  }
+
+  emptyState.classList.add("hidden");
+  fadeOutCurrentCards(() => populateEntries(visibleEntries));
 }
 
 form.addEventListener("submit", (event) => {

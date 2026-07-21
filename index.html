@@ -17,7 +17,10 @@
           <h1 class="logo">Journal</h1>
           <p class="tagline">Capture your thoughts, one entry at a time.</p>
         </div>
-        <button type="button" class="theme-toggle" id="theme-toggle">Dark mode</button>
+        <div class="header-actions">
+          <button type="button" class="btn-export" id="export-btn">Export .txt</button>
+          <button type="button" class="theme-toggle" id="theme-toggle">Dark mode</button>
+        </div>
       </div>
     </header>
 
@@ -78,7 +81,6 @@
               <option value="">All tags</option>
             </select>
           </label>
-          <button type="button" class="btn-export" id="export-btn">Export .txt</button>
         </div>
         <ul id="entries-list" class="entries-list"></ul>
         <p id="empty-state" class="empty-state">No entries yet. Write your first one above.</p>
