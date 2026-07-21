@@ -2,6 +2,8 @@ const form = document.getElementById("journal-form");
 const titleInput = document.getElementById("entry-title");
 const tagsInput = document.getElementById("entry-tags");
 const textInput = document.getElementById("entry-text");
+const searchInput = document.getElementById("search-input");
+const tagFilter = document.getElementById("tag-filter");
 const entriesList = document.getElementById("entries-list");
 const emptyState = document.getElementById("empty-state");
 const formTitle = document.getElementById("form-title");
@@ -44,6 +46,43 @@ function parseTags(tagsText) {
     .split(",")
     .map((tag) => tag.trim())
     .filter(Boolean);
+}
+
+function getUniqueTags(entries) {
+  const tags = new Set();
+  entries.forEach((entry) => {
+    (entry.tags || []).forEach((tag) => tags.add(tag));
+  });
+  return [...tags].sort((a, b) => a.localeCompare(b));
+}
+
+function updateTagFilterOptions(entries) {
+  const uniqueTags = getUniqueTags(entries);
+  const selectedValue = tagFilter.value;
+  tagFilter.innerHTML = `<option value="">All tags</option>` +
+    uniqueTags
+      .map((tag) => `<option value="${escapeHtml(tag)}">${escapeHtml(tag)}</option>`)
+      .join("");
+  if (uniqueTags.includes(selectedValue)) {
+    tagFilter.value = selectedValue;
+  } else {
+    tagFilter.value = "";
+  }
+}
+
+function filterEntries(entries) {
+  const query = searchInput.value.trim().toLowerCase();
+  const selectedTag = tagFilter.value;
+
+  return entries.filter((entry) => {
+    const title = entry.title.toLowerCase();
+    const text = entry.text.toLowerCase();
+    const matchesText =
+      query === "" || title.includes(query) || text.includes(query);
+    const matchesTag =
+      selectedTag === "" || (entry.tags || []).includes(selectedTag);
+    return matchesText && matchesTag;
+  });
 }
 
 function cancelEditing() {
@@ -116,12 +155,23 @@ function renderEntries() {
   entriesList.innerHTML = "";
 
   if (entries.length === 0) {
+    updateTagFilterOptions(entries);
+    emptyState.textContent = "No entries yet. Write your first one above.";
+    emptyState.classList.remove("hidden");
+    return;
+  }
+
+  updateTagFilterOptions(entries);
+  const visibleEntries = filterEntries(entries);
+
+  if (visibleEntries.length === 0) {
+    emptyState.textContent = "No entries match your search or tag filter.";
     emptyState.classList.remove("hidden");
     return;
   }
 
   emptyState.classList.add("hidden");
-  entries.forEach((entry) => {
+  visibleEntries.forEach((entry) => {
     entriesList.appendChild(renderEntry(entry));
   });
 }
@@ -163,6 +213,9 @@ form.addEventListener("submit", (event) => {
   form.reset();
   titleInput.focus();
 });
+
+searchInput.addEventListener("input", renderEntries);
+tagFilter.addEventListener("change", renderEntries);
 
 cancelButton.addEventListener("click", cancelEditing);
 

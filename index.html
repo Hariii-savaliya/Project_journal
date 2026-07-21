@@ -57,6 +57,23 @@
 
       <section class="entries-section">
         <h2 class="section-title">Your Entries</h2>
+        <div class="entries-toolbar">
+          <label class="toolbar-field">
+            <span>Search</span>
+            <input
+              type="search"
+              id="search-input"
+              placeholder="Search title or entry text..."
+              autocomplete="off"
+            >
+          </label>
+          <label class="toolbar-field">
+            <span>Filter by tag</span>
+            <select id="tag-filter">
+              <option value="">All tags</option>
+            </select>
+          </label>
+        </div>
         <ul id="entries-list" class="entries-list"></ul>
         <p id="empty-state" class="empty-state">No entries yet. Write your first one above.</p>
       </section>
