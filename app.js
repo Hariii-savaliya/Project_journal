@@ -1,5 +1,6 @@
 const form = document.getElementById("journal-form");
 const titleInput = document.getElementById("entry-title");
+const tagsInput = document.getElementById("entry-tags");
 const textInput = document.getElementById("entry-text");
 const entriesList = document.getElementById("entries-list");
 const emptyState = document.getElementById("empty-state");
@@ -38,6 +39,13 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function parseTags(tagsText) {
+  return tagsText
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
 function cancelEditing() {
   editingEntryId = null;
   form.reset();
@@ -53,6 +61,7 @@ function startEditingEntry(id) {
 
   editingEntryId = id;
   titleInput.value = entry.title;
+  tagsInput.value = entry.tags ? entry.tags.join(", ") : "";
   textInput.value = entry.text;
   formTitle.textContent = "Edit Entry";
   saveButton.textContent = "Update Entry";
@@ -72,12 +81,17 @@ function deleteEntry(id) {
 }
 
 function renderEntry(entry) {
+  const tagsHtml = entry.tags && entry.tags.length
+    ? `<div class="entry-tags">${entry.tags.map((tag) => `<span class="entry-tag">${escapeHtml(tag)}</span>`).join("")}</div>`
+    : "";
+
   const li = document.createElement("li");
   li.className = "entry-card";
   li.innerHTML = `
     <div class="entry-content">
       <p class="entry-date">${escapeHtml(entry.date)}</p>
       <h3 class="entry-title">${escapeHtml(entry.title)}</h3>
+      ${tagsHtml}
       <p class="entry-text">${escapeHtml(entry.text)}</p>
     </div>
     <div class="entry-actions">
@@ -122,9 +136,11 @@ form.addEventListener("submit", (event) => {
 
   const entries = loadEntries();
 
+  const tags = parseTags(tagsInput.value);
+
   if (editingEntryId) {
     const updatedEntries = entries.map((entry) =>
-      entry.id === editingEntryId ? { ...entry, title, text } : entry
+      entry.id === editingEntryId ? { ...entry, title, text, tags } : entry
     );
     saveEntries(updatedEntries);
     renderEntries();
@@ -135,6 +151,7 @@ form.addEventListener("submit", (event) => {
   const entry = {
     id: Date.now(),
     title,
+    tags,
     text,
     date: formatTodayDate(),
   };
