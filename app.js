@@ -107,8 +107,10 @@ function escapeHtml(str) {
 }
 
 function applyTheme(theme) {
-  document.body.classList.toggle("dark-mode", theme === "dark");
-  themeToggle.textContent = theme === "dark" ? "Light mode" : "Dark mode";
+  const isDark = theme === "dark";
+  document.body.classList.toggle("dark-mode", isDark);
+  document.documentElement.classList.toggle("dark-mode", isDark);
+  themeToggle.textContent = isDark ? "Light mode" : "Dark mode";
 }
 
 function loadTheme() {
@@ -121,7 +123,9 @@ function saveTheme(theme) {
 }
 
 function toggleTheme() {
-  const nextTheme = document.documentElement.classList.contains("dark-mode") ? "light" : "dark";
+  const currentTheme = document.body.classList.contains("dark-mode") ? "dark" : "light";
+  const nextTheme = currentTheme === "dark" ? "light" : "dark";
+  console.log(`toggleTheme: currentTheme=${currentTheme}, nextTheme=${nextTheme}`);
   saveTheme(nextTheme);
 }
 
